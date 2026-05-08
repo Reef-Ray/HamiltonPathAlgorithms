@@ -27,14 +27,14 @@ public class Main {
         long end1 = System.nanoTime();
 
         System.out.println("Backtracking: " + exact +
-                " Time: " + (end1 - start1));
+                " Time: " + ((end1 - start1) / 1e9) + " seconds");
 
         long start2 = System.nanoTime();
         boolean greedy = HamiltonianGreedy.hasHamiltonianPath(g);
         long end2 = System.nanoTime();
 
         System.out.println("Greedy: " + greedy +
-                " Time: " + (end2 - start2));
+                " Time: " + ((end2 - start2) / 1e9) + " seconds");
 
         scanner.close();
     }
