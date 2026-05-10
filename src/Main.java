@@ -12,22 +12,7 @@ public class Main {
             V = scanner.nextInt();
         }
 
-        System.out.print("Enter edge probability (p between 0 and 1): ");
-        double p = scanner.nextDouble();
-
-        while (p < 0 || p > 1) {
-            System.out.print("Enter a valid probability (0 to 1): ");
-            p = scanner.nextDouble();
-        }
-
-        Graph g = GraphGenerator.generateRandomGraph(V, p);
-
-        long start1 = System.nanoTime();
-        boolean exact = HamiltonianBacktracking.hasHamiltonianPath(g);
-        long end1 = System.nanoTime();
-
-        System.out.println("Backtracking: " + exact +
-                " Time: " + ((end1 - start1) / 1e9) + " seconds");
+        Graph g = GraphGenerator.generateRandomGraph(V);
 
         long start2 = System.nanoTime();
         boolean greedy = HamiltonianGreedy.hasHamiltonianPath(g);
@@ -35,6 +20,13 @@ public class Main {
 
         System.out.println("Greedy: " + greedy +
                 " Time: " + ((end2 - start2) / 1e9) + " seconds");
+
+        long start1 = System.nanoTime();
+        boolean exact = HamiltonianBacktracking.hasHamiltonianPath(g);
+        long end1 = System.nanoTime();
+
+        System.out.println("Backtracking: " + exact +
+                " Time: " + ((end1 - start1) / 1e9) + " seconds");
 
         scanner.close();
     }
