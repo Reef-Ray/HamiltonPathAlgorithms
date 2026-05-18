@@ -4,11 +4,13 @@ import java.io.PrintWriter;
 
 public class Main {
 
-    private static final int[] SIZES =
-            {5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 100};
+    // Backtracking is exponential/factorial — hits ~10 min around n=25-28
+    private static final int[] BACKTRACKING_SIZES =
+            {5, 8, 10, 12, 14, 16, 18, 20, 22, 25};
 
-    private static final double[] PROBABILITIES =
-            {0.25, 0.4, 0.85};
+    // Greedy is polynomial — hits ~10 min in the tens-of-thousands range
+    private static final int[] GREEDY_SIZES =
+            {500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000};
 
     private static final int RUNS = 5;
 
@@ -34,10 +36,16 @@ public class Main {
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(OUTPUT_FILE))) {
 
-            writer.println("p,n,algorithm,runs,successes,failures,average_seconds");
+            writer.println("n,algorithm,runs,successes,failures,average_seconds");
 
-            for (double p : PROBABILITIES) {
-                runProbabilityExperiment(p, writer);
+            System.out.println("\n=== BACKTRACKING EXPERIMENTS ===");
+            for (int n : BACKTRACKING_SIZES) {
+                runBacktrackingExperiment(n, writer);
+            }
+
+            System.out.println("\n=== GREEDY EXPERIMENTS ===");
+            for (int n : GREEDY_SIZES) {
+                runGreedyExperiment(n, writer);
             }
 
             System.out.println("\nResults saved to " + OUTPUT_FILE);
@@ -48,93 +56,86 @@ public class Main {
         }
     }
 
-    private static void runProbabilityExperiment(double p, PrintWriter writer) {
+    private static void runBacktrackingExperiment(int n, PrintWriter writer) {
 
-        System.out.println("\n=====================================");
-        System.out.println("Testing edge probability p = " + p);
-        System.out.println("Each run uses one random graph only");
-        System.out.println("No graph is regenerated if backtracking fails");
-        System.out.println("=====================================");
+        long totalTime = 0;
+        int successes = 0;
 
-        for (int n : SIZES) {
-            runSizeExperiment(n, p, writer);
-        }
-    }
-
-    private static void runSizeExperiment(int n, double p, PrintWriter writer) {
-
-        long totalBacktrackingTime = 0;
-        long totalGreedyTime = 0;
-
-        int backtrackingSuccesses = 0;
-        int greedySuccesses = 0;
-
-        System.out.println("\nVertices n = " + n);
+        System.out.println("\nBacktracking | Vertices n = " + n);
 
         for (int run = 1; run <= RUNS; run++) {
 
             System.out.println("\nRun " + run + ":");
 
-            Graph g = GraphGenerator.generateRandomGraph(n, p);
+            Graph g = GraphGenerator.generateRandomGraph(n);
 
-            long startBacktracking = System.nanoTime();
-            boolean backtrackingResult =
-                    HamiltonianBacktracking.hasHamiltonianPath(g);
-            long endBacktracking = System.nanoTime();
+            long start = System.nanoTime();
+            boolean result = HamiltonianBacktracking.hasHamiltonianPath(g);
+            long end = System.nanoTime();
 
-            long backtrackingTime = endBacktracking - startBacktracking;
-            totalBacktrackingTime += backtrackingTime;
+            long elapsed = end - start;
+            totalTime += elapsed;
 
-            if (backtrackingResult) {
-                backtrackingSuccesses++;
+            if (result) {
+                successes++;
             }
 
-            printRunResult("Backtracking", backtrackingResult, backtrackingTime);
-
-            long startGreedy = System.nanoTime();
-            boolean greedyResult =
-                    HamiltonianGreedy.hasHamiltonianPath(g);
-            long endGreedy = System.nanoTime();
-
-            long greedyTime = endGreedy - startGreedy;
-            totalGreedyTime += greedyTime;
-
-            if (greedyResult) {
-                greedySuccesses++;
-            }
-
-            printRunResult("Greedy", greedyResult, greedyTime);
+            printRunResult("Backtracking", result, elapsed);
         }
 
-        long averageBacktrackingNs = totalBacktrackingTime / RUNS;
-        long averageGreedyNs = totalGreedyTime / RUNS;
+        long averageNs = totalTime / RUNS;
+        int failures = RUNS - successes;
 
-        int backtrackingFailures = RUNS - backtrackingSuccesses;
-        int greedyFailures = RUNS - greedySuccesses;
-
-        writer.println(p + "," + n + ",Backtracking,"
+        writer.println(n + ",Backtracking,"
                 + RUNS + ","
-                + backtrackingSuccesses + ","
-                + backtrackingFailures + ","
-                + nanoToSeconds(averageBacktrackingNs));
-
-        writer.println(p + "," + n + ",Greedy,"
-                + RUNS + ","
-                + greedySuccesses + ","
-                + greedyFailures + ","
-                + nanoToSeconds(averageGreedyNs));
+                + successes + ","
+                + failures + ","
+                + nanoToSeconds(averageNs));
 
         System.out.println("\nAverage Results for n = " + n);
-        System.out.println("Probability p = " + p);
+        System.out.println("Backtracking successes: " + successes + "/" + RUNS);
+        printAverageResult("Backtracking", averageNs);
+    }
 
-        System.out.println("Backtracking successes: "
-                + backtrackingSuccesses + "/" + RUNS);
+    private static void runGreedyExperiment(int n, PrintWriter writer) {
 
-        System.out.println("Greedy successes: "
-                + greedySuccesses + "/" + RUNS);
+        long totalTime = 0;
+        int successes = 0;
 
-        printAverageResult("Backtracking", averageBacktrackingNs);
-        printAverageResult("Greedy", averageGreedyNs);
+        System.out.println("\nGreedy | Vertices n = " + n);
+
+        for (int run = 1; run <= RUNS; run++) {
+
+            System.out.println("\nRun " + run + ":");
+
+            Graph g = GraphGenerator.generateRandomGraph(n);
+
+            long start = System.nanoTime();
+            boolean result = HamiltonianGreedy.hasHamiltonianPath(g);
+            long end = System.nanoTime();
+
+            long elapsed = end - start;
+            totalTime += elapsed;
+
+            if (result) {
+                successes++;
+            }
+
+            printRunResult("Greedy", result, elapsed);
+        }
+
+        long averageNs = totalTime / RUNS;
+        int failures = RUNS - successes;
+
+        writer.println(n + ",Greedy,"
+                + RUNS + ","
+                + successes + ","
+                + failures + ","
+                + nanoToSeconds(averageNs));
+
+        System.out.println("\nAverage Results for n = " + n);
+        System.out.println("Greedy successes: " + successes + "/" + RUNS);
+        printAverageResult("Greedy", averageNs);
     }
 
     private static void printRunResult(
