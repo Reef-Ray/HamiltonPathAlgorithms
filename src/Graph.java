@@ -1,12 +1,17 @@
-import java.util.*;
+package HamiltonianPath;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Graph {
+
     private int V;
     private List<List<Integer>> adj;
 
     public Graph(int V) {
         this.V = V;
         adj = new ArrayList<>();
+
         for (int i = 0; i < V; i++) {
             adj.add(new ArrayList<>());
         }
@@ -14,7 +19,7 @@ public class Graph {
 
     public void addEdge(int u, int v) {
         adj.get(u).add(v);
-        adj.get(v).add(u); // undirected
+        adj.get(v).add(u);
     }
 
     public List<Integer> getNeighbors(int v) {
